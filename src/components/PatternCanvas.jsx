@@ -1,9 +1,8 @@
 import { useCallback, useRef } from "react";
 
+import { BEAD_HEIGHT, BEAD_WIDTH } from "../constants/beadLayout";
 import PatternRow from "./PatternRow";
 
-const BEAD_WIDTH = 11;
-const BEAD_HEIGHT = 12;
 const GAP = 0;
 const PADDING = 20;
 

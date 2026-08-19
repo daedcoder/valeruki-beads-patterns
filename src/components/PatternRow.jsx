@@ -1,9 +1,8 @@
 import { memo } from "react";
 
+import { BEAD_HEIGHT, BEAD_WIDTH } from "../constants/beadLayout";
 import Bead from "./Bead";
 
-const BEAD_WIDTH = 11;
-const BEAD_HEIGHT = 12;
 const GAP = 0;
 const PADDING = 20;
 

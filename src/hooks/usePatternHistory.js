@@ -8,9 +8,13 @@ import {
   resetHistorySnapshot,
   undoHistory,
 } from "../utils/patternHistory";
+import {
+  DEFAULT_PATTERN_HEIGHT,
+  DEFAULT_PATTERN_WIDTH,
+} from "../utils/patternSize";
 
-const INITIAL_WIDTH = 50;
-const INITIAL_HEIGHT = 40;
+const INITIAL_WIDTH = DEFAULT_PATTERN_WIDTH;
+const INITIAL_HEIGHT = DEFAULT_PATTERN_HEIGHT;
 const MAX_HISTORY = 30;
 
 export const createInitialHistory = () => [{

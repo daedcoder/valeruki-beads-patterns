@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const ToolSelector = ({
+const EditorToolbar = ({
   tool,
   setTool,
   newPattern,
@@ -20,15 +20,15 @@ const ToolSelector = ({
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="fixed top-1 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-2 bg-stone-600 py-2 px-4 rounded-lg shadow shadow-stone-700 overflow-hidden">
 
         {/* PINTAR */}
         <button
           onClick={() => setTool("pencil")}
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 bg-stone-300 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "pencil"
               ? "bg-stone-200 border-white"
-              : "bg-stone-800 text-white border-stone-800"
+              : "bg-stone-600 text-white"
           }`}
         >
           <svg
@@ -57,10 +57,10 @@ const ToolSelector = ({
         {/* BORRADOR */}
         <button
           onClick={() => setTool("eraser")}
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "eraser"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-800 text-red-300 border-stone-800"
+              : "bg-stone-600 text-red-300"
           }`}
         >
           <svg
@@ -90,10 +90,10 @@ const ToolSelector = ({
           onClick={() =>
             setTool("add-column")
           }
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "add-column"
               ? "bg-stone-200 border-white"
-              : "bg-stone-800 text-white border-stone-800"
+              : "bg-stone-600 text-white"
           }`}
         >
           <svg
@@ -123,10 +123,10 @@ const ToolSelector = ({
           onClick={() =>
             setTool("remove-column")
           }
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "remove-column"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-800 text-red-300 border-stone-800"
+              : "bg-stone-600 text-red-300"
           }`}
         >
           <svg
@@ -154,10 +154,10 @@ const ToolSelector = ({
         {/* AGREGAR FILA */}
         <button
           onClick={() => setTool("add-row")}
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "add-row"
               ? "bg-stone-200 border-white"
-              : "bg-stone-800 text-white border-stone-800"
+              : "bg-stone-600 text-white"
           }`}
         >
           <svg
@@ -187,10 +187,10 @@ const ToolSelector = ({
           onClick={() =>
             setTool("remove-row")
           }
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`border-2 border-stone-600 hover:border-white rounded p-2 text-sm ${
             tool === "remove-row"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-800 text-red-300 border-stone-800"
+              : "bg-stone-600 text-red-300 "
           }`}
         >
           <svg
@@ -218,10 +218,10 @@ const ToolSelector = ({
         {/* BALDE */}
         <button
           onClick={() => setTool("fill")}
-          className={`hover:bg-stone-600 rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
             tool === "fill"
               ? "bg-stone-200 border-white"
-              : "bg-stone-800 text-white border-stone-800"
+              : "bg-stone-600 text-white"
           }`}
         >
           <svg
@@ -253,9 +253,9 @@ const ToolSelector = ({
           onClick={undo}
           disabled={!canUndo}
           title="Deshacer"
-          className={`rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 border-stone-600 p-2 text-sm ${
             canUndo
-              ? "bg-stone-800 text-white border-stone-800 hover:bg-stone-600"
+              ? "bg-stone-600 text-white hover:border-white"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
           }`}
         >
@@ -281,9 +281,9 @@ const ToolSelector = ({
           onClick={redo}
           disabled={!canRedo}
           title="Rehacer"
-          className={`rounded border-2 px-3 py-2 text-sm ${
+          className={`rounded border-2 p-2 text-sm ${
             canRedo
-              ? "bg-stone-800 text-white border-stone-800 hover:bg-stone-600"
+              ? "bg-stone-600 text-white border-stone-600 hover:border-white"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
           }`}
         >
@@ -312,7 +312,7 @@ const ToolSelector = ({
             setShowNewDialog(true)
           }
           title="Nuevo patrón"
-          className="rounded border-2 px-3 py-2 text-sm bg-stone-800 text-white border-stone-800 hover:bg-stone-600"
+          className="rounded border-2 p-2 text-sm bg-stone-600 text-white border-stone-600 hover:border-white"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -387,4 +387,4 @@ const ToolSelector = ({
   );
 };
 
-export default ToolSelector;
+export default EditorToolbar;

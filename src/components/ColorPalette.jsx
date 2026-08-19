@@ -29,7 +29,7 @@ const ColorPalette = ({
         className="w-full rounded border border-stone-400 bg-stone-800 px-2 py-1 text-sm text-stone-100 placeholder:text-stone-400 focus:border-blue-400 focus:outline-none"
       />
 
-      <div className="flex max-h-[calc(100vh-190px)] flex-col gap-2 overflow-y-auto pr-1">
+      <div className="flex max-h-[calc(100vh-90px)] flex-col gap-2 overflow-y-auto pr-1">
         {filteredColors.map((item) => {
           const isSelected = color === item.value;
 

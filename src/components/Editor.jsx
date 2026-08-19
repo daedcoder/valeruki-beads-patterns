@@ -2,13 +2,19 @@ import { useCallback, useMemo, useState } from "react";
 
 import COLORS from "../data/colors";
 import { usePatternHistory } from "../hooks/usePatternHistory";
+import {
+    DEFAULT_PATTERN_HEIGHT,
+    DEFAULT_PATTERN_WIDTH,
+    clampPatternSize,
+} from "../utils/patternSize";
 
-import ColorPalette from "./ColorPalette";
-import EditorToolbar from "./EditorToolbar";
+import ColorSidebar from "./ColorSidebar";
+import ToolSelector from "./ToolSelector";
 import PatternCanvas from "./PatternCanvas";
+import PatternSidebar from "./PatternSidebar";
 
-const INITIAL_WIDTH = 50;
-const INITIAL_HEIGHT = 40;
+const INITIAL_WIDTH = DEFAULT_PATTERN_WIDTH;
+const INITIAL_HEIGHT = DEFAULT_PATTERN_HEIGHT;
 
 const createPattern = (width, height) =>
     Array.from({ length: height }, () =>
@@ -370,16 +376,16 @@ const Editor = () => {
 
     const newPattern = useCallback(() => {
         const next = createPattern(
-            width,
-            height
+            DEFAULT_PATTERN_WIDTH,
+            DEFAULT_PATTERN_HEIGHT
         );
 
         setPattern(next);
-        resetHistory(next, width, height);
+        setWidth(DEFAULT_PATTERN_WIDTH);
+        setHeight(DEFAULT_PATTERN_HEIGHT);
+        resetHistory(next, DEFAULT_PATTERN_WIDTH, DEFAULT_PATTERN_HEIGHT);
         setTool("pencil");
     }, [
-        width,
-        height,
         resetHistory,
     ]);
 
@@ -389,32 +395,34 @@ const Editor = () => {
 
     const resizePattern = useCallback(
         (newWidth, newHeight) => {
+            const safeSize = clampPatternSize(newWidth, newHeight);
+
             if (
-                newWidth < 1 ||
-                newHeight < 1
+                safeSize.width < 1 ||
+                safeSize.height < 1
             ) {
                 return;
             }
 
             setPattern((prev) => {
                 const next = Array.from(
-                    { length: newHeight },
+                    { length: safeSize.height },
                     (_, row) =>
                         Array.from(
-                            { length: newWidth },
+                            { length: safeSize.width },
                             (_, col) =>
                                 prev[row]?.[col] ??
                                 null
                         )
                 );
 
-                setWidth(newWidth);
-                setHeight(newHeight);
+                setWidth(safeSize.width);
+                setHeight(safeSize.height);
 
                 commitHistory(
                     next,
-                    newWidth,
-                    newHeight
+                    safeSize.width,
+                    safeSize.height
                 );
 
                 return next;
@@ -425,7 +433,7 @@ const Editor = () => {
 
     return (
         <div className="flex h-screen flex-col bg-stone-500">
-            <EditorToolbar
+            <ToolSelector
                 patternType={patternType}
                 setPatternType={setPatternType}
 
@@ -445,49 +453,18 @@ const Editor = () => {
                 canRedo={canRedo}
             />
 
-            <div className="flex min-h-0 flex-1 gap-3 p-3">
-                <aside className="w-48 shrink-0 rounded-md bg-stone-600 p-3 shadow shadow-stone-800 self-start">
-                    <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-200">
-                        Colores Usados
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        {usedColors.length === 0 ? (
-                            <div className="rounded border border-dashed border-stone-500 px-2 py-3 text-center text-xs text-stone-300">
-                                Diseña algo para ver los colores aquí.
-                            </div>
-                        ) : (
-                            usedColors.map((item) => {
-                                const isSelected = color === item.value;
-
-                                return (
-                                    <button
-                                        key={item.value}
-                                        type="button"
-                                        onClick={() => {
-                                            setColor(item.value);
-                                            setTool("pencil");
-                                        }}
-                                        className={`flex items-center gap-2 rounded border px-2 py-1.5 text-left text-sm transition ${
-                                            isSelected
-                                                ? "border-blue-400 bg-stone-800 text-white"
-                                                : "border-stone-600 bg-stone-800/60 text-stone-200 hover:bg-stone-700"
-                                        }`}
-                                    >
-                                        <span
-                                            className="h-5 w-5 rounded border border-stone-300"
-                                            style={{ backgroundColor: item.value }}
-                                            aria-label={item.name}
-                                        />
-                                        <span className="truncate">
-                                            {item.name}
-                                        </span>
-                                    </button>
-                                );
-                            })
-                        )}
-                    </div>
-                </aside>
+            <div className="flex min-h-0 flex-1 gap-3">
+                <PatternSidebar
+                    patternType={patternType}
+                    setPatternType={setPatternType}
+                    width={width}
+                    height={height}
+                    resizePattern={resizePattern}
+                    usedColors={usedColors}
+                    color={color}
+                    setColor={setColor}
+                    setTool={setTool}
+                />
 
                 <div className="flex-1 min-w-0">
                     <PatternCanvas
@@ -512,16 +489,11 @@ const Editor = () => {
                     />
                 </div>
 
-                <aside className="w-56 shrink-0 rounded-md bg-stone-600 p-3 shadow shadow-stone-800">
-                    <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-stone-200">
-                        lista de Colores
-                    </div>
-                    <ColorPalette
-                        color={color}
-                        setColor={setColor}
-                        setTool={setTool}
-                    />
-                </aside>
+                <ColorSidebar
+                    color={color}
+                    setColor={setColor}
+                    setTool={setTool}
+                />
             </div>
         </div>
     );

@@ -1,7 +1,6 @@
 import { memo } from "react";
 
-const BEAD_WIDTH = 11;
-const BEAD_HEIGHT = 12;
+import { BEAD_HEIGHT, BEAD_WIDTH } from "../constants/beadLayout";
 
 const Bead = memo(
     ({
@@ -46,7 +45,7 @@ const Bead = memo(
                     height={BEAD_HEIGHT}
                     rx={2}
                     fill={color || "#ffffff"}
-                    stroke="#cbd5e1"
+                    stroke="#A1A1A1"
                     strokeWidth="1"
                 />
 
