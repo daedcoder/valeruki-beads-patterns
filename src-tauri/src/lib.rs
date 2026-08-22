@@ -180,6 +180,45 @@ fn list_patterns(app: tauri::AppHandle) -> Result<Vec<PatternRecord>, String> {
     Ok(records)
 }
 
+#[tauri::command]
+fn rename_pattern(app: tauri::AppHandle, pattern_id: i64, new_name: String) -> Result<(), String> {
+    let trimmed_name = new_name.trim();
+    if trimmed_name.is_empty() {
+        return Err("El nombre del patrón es obligatorio".to_string());
+    }
+
+    let (connection, _) = open_database(&app)?;
+    connection
+        .execute(
+            "UPDATE patterns SET name = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2",
+            rusqlite::params![trimmed_name, pattern_id],
+        )
+        .map_err(|error| format!("No se pudo renombrar el patrón: {error}"))?;
+
+    if connection.changes() == 0 {
+        return Err("El patrón que intentas renombrar no existe".to_string());
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+fn delete_pattern(app: tauri::AppHandle, pattern_id: i64) -> Result<(), String> {
+    let (connection, _) = open_database(&app)?;
+    connection
+        .execute(
+            "DELETE FROM patterns WHERE id = ?1",
+            rusqlite::params![pattern_id],
+        )
+        .map_err(|error| format!("No se pudo eliminar el patrón: {error}"))?;
+
+    if connection.changes() == 0 {
+        return Err("El patrón que intentas eliminar no existe".to_string());
+    }
+
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -188,7 +227,9 @@ pub fn run() {
             greet,
             initialize_database,
             save_pattern,
-            list_patterns
+            list_patterns,
+            rename_pattern,
+            delete_pattern
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

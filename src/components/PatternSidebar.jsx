@@ -20,6 +20,7 @@ const PatternSidebar = ({
     saveCurrentPattern,
     openedPattern,
     openPatterns,
+    isDirty,
 }) => {
     const [showNewDialog, setShowNewDialog] =
         useState(false);
@@ -57,6 +58,7 @@ const PatternSidebar = ({
                     <path d="M9 18h6" />
                 </svg>
             ),
+            highlight: isDirty,
         },
         {
             label: "Abrir",
@@ -95,13 +97,23 @@ const PatternSidebar = ({
     return (
         <aside className="w-70 shrink-0 bg-stone-700 p-3 text-stone-100 fixed top-2 left-2 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500">
             <div className="grid grid-cols-3 gap-2">
-                {actions.map(({ label, icon, onClick }) => (
+                {actions.map(({ label, icon, onClick, highlight }) => (
                     <button
                         key={label}
                         type="button"
                         onClick={onClick}
-                        className="flex flex-col items-center justify-center gap-1 rounded-md bg-stone-800/50 px-1 py-2 text-center text-[11px] text-stone-100 transition hover:bg-stone-600"
+                        className={`relative flex flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-[11px] text-stone-100 transition ${
+                            highlight
+                                ? "bg-amber-600/30 ring-1 ring-inset ring-amber-400/50 hover:bg-amber-600/40"
+                                : "bg-stone-800/50 hover:bg-stone-600"
+                        }`}
                     >
+                        {highlight && (
+                            <span
+                                className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)] animate-pulse"
+                                title="Cambios sin guardar"
+                            />
+                        )}
                         <span className="flex h-8 w-8 items-center justify-center text-stone-100">{icon}</span>
                         <span className="font-medium tracking-tight">{label}</span>
                     </button>
@@ -146,15 +158,15 @@ const PatternSidebar = ({
                     onMouseDown={() => setShowSaveDialog(false)}
                 >
                     <form
-                        className="w-full max-w-sm rounded-lg bg-stone-800 p-6 shadow-xl"
+                        className="w-full max-w-sm rounded-lg bg-stone-800 border border-stone-600 p-6 shadow shadow-black/50"
                         onSubmit={handleSavePattern}
                         onMouseDown={(event) => event.stopPropagation()}
                     >
-                        <h2 className="text-center text-lg font-semibold text-stone-100">
-                            Guardar patrón
+                        <h2 className="text-center uppercase font-semibold text-stone-100">
+                            Guardar diseño
                         </h2>
                         <label className="mt-5 block text-sm text-stone-200">
-                            Nombre
+                            Nombre del diseño
                             <input
                                 autoFocus
                                 value={patternName}

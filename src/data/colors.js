@@ -41,4 +41,8 @@ const COLORS = [
   { name: "Bordeau", value: "#a21caf" },
 ];
 
+export const COLOR_BY_VALUE = new Map(
+  COLORS.map((color) => [color.value.toLowerCase(), color.name])
+);
+
 export default COLORS;

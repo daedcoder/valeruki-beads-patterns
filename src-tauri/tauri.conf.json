@@ -12,9 +12,9 @@
   "app": {
     "windows": [
       {
-        "title": "valeruki-beads-patterns",
-        "width": 800,
-        "height": 600
+        "title": "VALERUKI - Beads Patterns",
+        "width": 1600,
+        "height": 1100
       }
     ],
     "security": {

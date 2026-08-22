@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
-import COLORS from "../data/colors";
+import COLORS, { COLOR_BY_VALUE } from "../data/colors";
 import { usePatternHistory } from "../hooks/usePatternHistory";
 import {
     DEFAULT_PATTERN_HEIGHT,
@@ -34,17 +34,14 @@ const findColorName = (value) => {
         return "Vacío";
     }
 
-    const match = COLORS.find(
-        (color) =>
-            color.value.toLowerCase() ===
-            normalizedValue
-    );
-
-    return match ? match.name : "Personalizado";
+    const match = COLOR_BY_VALUE.get(normalizedValue);
+    return match ?? "Personalizado";
 };
 
 const formatPatternType = (value) =>
-    value === "peyote" ? "Peyote" : value;
+    value === "peyote" ? "Peyote" : value === "telar" ? "Telar" : value;
+
+
 
 const Editor = () => {
     const [patternType, setPatternType] = useState("peyote");
@@ -63,6 +60,31 @@ const Editor = () => {
     const [showOpenDialog, setShowOpenDialog] = useState(false);
     const [patternSearch, setPatternSearch] = useState("");
     const [openError, setOpenError] = useState("");
+    const [renamingId, setRenamingId] = useState(null);
+    const [renamingValue, setRenamingValue] = useState("");
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [isDirty, setIsDirty] = useState(false);
+    const [toasts, setToasts] = useState([]);
+
+    // Mirror refs: always hold the latest state values so callbacks can read
+    // them synchronously without relying on stale closures.
+    const patternRef = useRef(pattern);
+    const widthRef = useRef(width);
+    const heightRef = useRef(height);
+    const patternTypeRef = useRef(patternType);
+
+    useEffect(() => { patternRef.current = pattern; }, [pattern]);
+    useEffect(() => { widthRef.current = width; }, [width]);
+    useEffect(() => { heightRef.current = height; }, [height]);
+    useEffect(() => { patternTypeRef.current = patternType; }, [patternType]);
+
+    const pushToast = useCallback((message, variant = "info") => {
+        const id = Math.random().toString(36).slice(2) + Date.now().toString(36);
+        setToasts((prev) => [...prev, { id, message, variant }]);
+        setTimeout(() => {
+            setToasts((prev) => prev.filter((t) => t.id !== id));
+        }, 4000);
+    }, []);
 
     const {
         canUndo,
@@ -102,6 +124,7 @@ const Editor = () => {
             setWidth(snapshot.width);
             setHeight(snapshot.height);
             setTool("pencil");
+            setIsDirty(true);
         },
         []
     );
@@ -126,25 +149,22 @@ const Editor = () => {
 
     const paint = useCallback(
         (row, col) => {
-            setPattern((prev) => {
-                const currentColor =
-                    prev[row][col];
+            const prev = patternRef.current;
+            const currentColor = prev[row][col];
+            const newColor = tool === "eraser" ? null : color;
 
-                const newColor =
-                    tool === "eraser"
-                        ? null
-                        : color;
+            if (currentColor === newColor) {
+                return;
+            }
 
-                if (currentColor === newColor) {
-                    return prev;
-                }
+            // Clone only the affected row so PatternRow.memo keeps siblings
+            // stable and avoids re-rendering the whole canvas.
+            const next = [...prev];
+            next[row] = [...prev[row]];
+            next[row][col] = newColor;
 
-                const next = prev.map((r) => [...r]);
-
-                next[row][col] = newColor;
-
-                return next;
-            });
+            setPattern(next);
+            setIsDirty(true);
         },
         [tool, color]
     );
@@ -154,20 +174,12 @@ const Editor = () => {
     // --------------------------------------------------
 
     const commitCurrentPattern = useCallback(() => {
-        setPattern((currentPattern) => {
-            commitHistory(
-                currentPattern,
-                width,
-                height
-            );
-
-            return currentPattern;
-        });
-    }, [
-        commitHistory,
-        width,
-        height,
-    ]);
+        commitHistory(
+            patternRef.current,
+            widthRef.current,
+            heightRef.current
+        );
+    }, [commitHistory]);
 
     // --------------------------------------------------
     // BALDE
@@ -175,69 +187,52 @@ const Editor = () => {
 
     const fillArea = useCallback(
         (startRow, startCol) => {
-            setPattern((prev) => {
-                const targetColor =
-                    prev[startRow][startCol];
+            const prev = patternRef.current;
+            const targetColor = prev[startRow][startCol];
 
-                if (targetColor === color) {
-                    return prev;
+            if (targetColor === color) {
+                return;
+            }
+
+            const next = prev.map((row) => [...row]);
+
+            const queue = [[startRow, startCol]];
+            let queueIndex = 0;
+
+            while (queueIndex < queue.length) {
+                const [row, col] = queue[queueIndex++];
+
+                if (
+                    row < 0 ||
+                    row >= next.length ||
+                    col < 0 ||
+                    col >= next[row].length
+                ) {
+                    continue;
                 }
 
-                const next = prev.map((row) => [
-                    ...row,
-                ]);
-
-                const queue = [
-                    [startRow, startCol],
-                ];
-
-                let queueIndex = 0;
-
-                while (queueIndex < queue.length) {
-                    const [row, col] =
-                        queue[queueIndex++];
-
-                    if (
-                        row < 0 ||
-                        row >= next.length ||
-                        col < 0 ||
-                        col >= next[row].length
-                    ) {
-                        continue;
-                    }
-
-                    if (
-                        next[row][col] !==
-                        targetColor
-                    ) {
-                        continue;
-                    }
-
-                    next[row][col] = color;
-
-                    queue.push(
-                        [row - 1, col],
-                        [row + 1, col],
-                        [row, col - 1],
-                        [row, col + 1]
-                    );
+                if (next[row][col] !== targetColor) {
+                    continue;
                 }
 
-                commitHistory(
-                    next,
-                    width,
-                    height
+                next[row][col] = color;
+
+                queue.push(
+                    [row - 1, col],
+                    [row + 1, col],
+                    [row, col - 1],
+                    [row, col + 1]
                 );
+            }
 
-                return next;
-            });
+            const currentWidth = widthRef.current;
+            const currentHeight = heightRef.current;
+
+            setPattern(next);
+            setIsDirty(true);
+            commitHistory(next, currentWidth, currentHeight);
         },
-        [
-            color,
-            commitHistory,
-            width,
-            height,
-        ]
+        [color, commitHistory]
     );
 
     // --------------------------------------------------
@@ -246,39 +241,24 @@ const Editor = () => {
 
     const addColumn = useCallback(
         (column) => {
-            setPattern((prev) => {
-                const next = prev.map((row) => {
-                    const newRow = [...row];
+            const prev = patternRef.current;
+            const currentHeight = heightRef.current;
+            const currentWidth = widthRef.current;
 
-                    // Nueva columna a la derecha
-                    // de la seleccionada.
-                    newRow.splice(
-                        column + 1,
-                        0,
-                        null
-                    );
-
-                    return newRow;
-                });
-
-                const nextWidth = width + 1;
-
-                setWidth(nextWidth);
-
-                commitHistory(
-                    next,
-                    nextWidth,
-                    height
-                );
-
-                return next;
+            const next = prev.map((row) => {
+                const newRow = [...row];
+                newRow.splice(column + 1, 0, null);
+                return newRow;
             });
+
+            const nextWidth = currentWidth + 1;
+
+            setPattern(next);
+            setWidth(nextWidth);
+            setIsDirty(true);
+            commitHistory(next, nextWidth, currentHeight);
         },
-        [
-            width,
-            height,
-            commitHistory,
-        ]
+        [commitHistory]
     );
 
     // --------------------------------------------------
@@ -287,35 +267,26 @@ const Editor = () => {
 
     const removeColumn = useCallback(
         (column) => {
-            if (width <= 1) return;
+            const currentWidth = widthRef.current;
+            if (currentWidth <= 1) return;
 
-            setPattern((prev) => {
-                const next = prev.map((row) => {
-                    const newRow = [...row];
+            const prev = patternRef.current;
+            const currentHeight = heightRef.current;
 
-                    newRow.splice(column, 1);
-
-                    return newRow;
-                });
-
-                const nextWidth = width - 1;
-
-                setWidth(nextWidth);
-
-                commitHistory(
-                    next,
-                    nextWidth,
-                    height
-                );
-
-                return next;
+            const next = prev.map((row) => {
+                const newRow = [...row];
+                newRow.splice(column, 1);
+                return newRow;
             });
+
+            const nextWidth = currentWidth - 1;
+
+            setPattern(next);
+            setWidth(nextWidth);
+            setIsDirty(true);
+            commitHistory(next, nextWidth, currentHeight);
         },
-        [
-            width,
-            height,
-            commitHistory,
-        ]
+        [commitHistory]
     );
 
     // --------------------------------------------------
@@ -324,34 +295,21 @@ const Editor = () => {
 
     const addRow = useCallback(
         (row) => {
-            setPattern((prev) => {
-                const next = [...prev];
+            const prev = patternRef.current;
+            const currentWidth = widthRef.current;
+            const currentHeight = heightRef.current;
 
-                next.splice(
-                    row + 1,
-                    0,
-                    Array(width).fill(null)
-                );
+            const next = [...prev];
+            next.splice(row + 1, 0, Array(currentWidth).fill(null));
 
-                const nextHeight =
-                    height + 1;
+            const nextHeight = currentHeight + 1;
 
-                setHeight(nextHeight);
-
-                commitHistory(
-                    next,
-                    width,
-                    nextHeight
-                );
-
-                return next;
-            });
+            setPattern(next);
+            setHeight(nextHeight);
+            setIsDirty(true);
+            commitHistory(next, currentWidth, nextHeight);
         },
-        [
-            width,
-            height,
-            commitHistory,
-        ]
+        [commitHistory]
     );
 
     // --------------------------------------------------
@@ -360,32 +318,23 @@ const Editor = () => {
 
     const removeRow = useCallback(
         (row) => {
-            if (height <= 1) return;
+            const currentHeight = heightRef.current;
+            if (currentHeight <= 1) return;
 
-            setPattern((prev) => {
-                const next = [...prev];
+            const prev = patternRef.current;
+            const currentWidth = widthRef.current;
 
-                next.splice(row, 1);
+            const next = [...prev];
+            next.splice(row, 1);
 
-                const nextHeight =
-                    height - 1;
+            const nextHeight = currentHeight - 1;
 
-                setHeight(nextHeight);
-
-                commitHistory(
-                    next,
-                    width,
-                    nextHeight
-                );
-
-                return next;
-            });
+            setPattern(next);
+            setHeight(nextHeight);
+            setIsDirty(true);
+            commitHistory(next, currentWidth, nextHeight);
         },
-        [
-            width,
-            height,
-            commitHistory,
-        ]
+        [commitHistory]
     );
 
     // --------------------------------------------------
@@ -404,9 +353,8 @@ const Editor = () => {
         setOpenedPattern(null);
         resetHistory(next, DEFAULT_PATTERN_WIDTH, DEFAULT_PATTERN_HEIGHT);
         setTool("pencil");
-    }, [
-        resetHistory,
-    ]);
+        setIsDirty(false);
+    }, [resetHistory]);
 
     // --------------------------------------------------
     // REDIMENSIONAR
@@ -416,42 +364,49 @@ const Editor = () => {
         (newWidth, newHeight) => {
             const safeSize = clampPatternSize(newWidth, newHeight);
 
-            if (
-                safeSize.width < 1 ||
-                safeSize.height < 1
-            ) {
+            if (safeSize.width < 1 || safeSize.height < 1) {
                 return;
             }
 
-            setPattern((prev) => {
-                const next = Array.from(
-                    { length: safeSize.height },
-                    (_, row) =>
-                        Array.from(
-                            { length: safeSize.width },
-                            (_, col) =>
-                                prev[row]?.[col] ??
-                                null
-                        )
+            const prev = patternRef.current;
+            const next = Array.from(
+                { length: safeSize.height },
+                (_, row) =>
+                    Array.from(
+                        { length: safeSize.width },
+                        (_, col) => prev[row]?.[col] ?? null
+                    )
+            );
+
+            const currentWidth = widthRef.current;
+            const currentHeight = heightRef.current;
+
+            const changed =
+                safeSize.width !== currentWidth ||
+                safeSize.height !== currentHeight ||
+                next.some((r, ri) =>
+                    r.some((c, ci) => c !== prev[ri]?.[ci])
                 );
 
-                setWidth(safeSize.width);
-                setHeight(safeSize.height);
+            setPattern(next);
+            setWidth(safeSize.width);
+            setHeight(safeSize.height);
+            commitHistory(next, safeSize.width, safeSize.height);
 
-                commitHistory(
-                    next,
-                    safeSize.width,
-                    safeSize.height
-                );
-
-                return next;
-            });
+            if (changed) {
+                setIsDirty(true);
+            }
         },
         [commitHistory]
     );
 
     const savePattern = useCallback(async (name) => {
-        const beads = pattern.flatMap((row, rowIndex) =>
+        const currentPattern = patternRef.current;
+        const currentWidth = widthRef.current;
+        const currentHeight = heightRef.current;
+        const currentPatternType = patternTypeRef.current;
+
+        const beads = currentPattern.flatMap((row, rowIndex) =>
             row.flatMap((cell, colIndex) =>
                 cell
                     ? [{ row: rowIndex, col: colIndex, color: cell }]
@@ -463,38 +418,56 @@ const Editor = () => {
             input: {
                 pattern_id: openedPattern?.id ?? null,
                 name,
-                pattern_type: patternType,
-                width,
-                height,
+                pattern_type: currentPatternType,
+                width: currentWidth,
+                height: currentHeight,
                 beads,
             },
         });
 
         setOpenedPattern((current) => current ?? { id: savedId, name });
+        setIsDirty(false);
         return savedId;
-    }, [pattern, patternType, width, height, openedPattern]);
+    }, [openedPattern]);
 
     const saveCurrentPattern = useCallback(() => {
         if (!openedPattern) return;
 
-        savePattern(openedPattern.name).catch((error) => {
-            console.error("No se pudo actualizar el patrón:", error);
-        });
-    }, [openedPattern, savePattern]);
+        savePattern(openedPattern.name)
+            .catch((error) => {
+                console.error("No se pudo actualizar el patrón:", error);
+                pushToast(
+                    "No se pudo guardar el diseño: " + String(error.message || error),
+                    "error"
+                );
+            });
+    }, [openedPattern, savePattern, pushToast]);
+
+    const changePatternType = useCallback((nextType) => {
+        const current = patternTypeRef.current;
+        if (current === nextType) return;
+        setPatternType(nextType);
+        setIsDirty(true);
+    }, []);
 
     const openPatterns = useCallback(async () => {
         setOpenError("");
         setPatternSearch("");
+        setRenamingId(null);
+        setRenamingValue("");
+        setDeleteTarget(null);
 
         try {
             const records = await invoke("list_patterns");
             setSavedPatterns(records);
             setShowOpenDialog(true);
         } catch (error) {
-            setOpenError(String(error));
+            const message = String(error.message || error);
+            setOpenError(message);
+            pushToast("No se pudieron cargar los diseños", "error");
             setShowOpenDialog(true);
         }
-    }, []);
+    }, [pushToast]);
 
     const loadPattern = useCallback((record) => {
         const next = createPattern(record.width, record.height);
@@ -516,7 +489,92 @@ const Editor = () => {
         resetHistory(next, record.width, record.height);
         setTool("pencil");
         setShowOpenDialog(false);
+        setIsDirty(false);
     }, [resetHistory]);
+
+    const refreshPatterns = useCallback(async () => {
+        try {
+            const records = await invoke("list_patterns");
+            setSavedPatterns(records);
+        } catch (error) {
+            const message = String(error.message || error);
+            setOpenError(message);
+            pushToast("No se pudo actualizar la lista de diseños", "error");
+        }
+    }, [pushToast]);
+
+    const startRenaming = useCallback((record) => {
+        setRenamingId(record.id);
+        setRenamingValue(record.name);
+    }, []);
+
+    const cancelRenaming = useCallback(() => {
+        setRenamingId(null);
+        setRenamingValue("");
+    }, []);
+
+    const commitRenaming = useCallback(async () => {
+        if (!renamingId) return;
+
+        const newName = renamingValue.trim();
+        if (!newName) {
+            setOpenError("El nombre del patrón es obligatorio");
+            pushToast("El nombre del patrón es obligatorio", "error");
+            return;
+        }
+
+        try {
+            await invoke("rename_pattern", {
+                patternId: renamingId,
+                newName: newName,
+            });
+
+            setOpenedPattern((current) =>
+                current && current.id === renamingId
+                    ? { ...current, name: newName }
+                    : current
+            );
+
+            cancelRenaming();
+            await refreshPatterns();
+            pushToast("Diseño renombrado correctamente", "success");
+        } catch (error) {
+            const message = String(error.message || error);
+            setOpenError(message);
+            pushToast("No se pudo renombrar: " + message, "error");
+        }
+    }, [renamingId, renamingValue, cancelRenaming, refreshPatterns, pushToast]);
+
+    const requestDelete = useCallback((record) => {
+        setDeleteTarget(record);
+    }, []);
+
+    const cancelDelete = useCallback(() => {
+        setDeleteTarget(null);
+    }, []);
+
+    const confirmDelete = useCallback(async () => {
+        if (!deleteTarget) return;
+
+        try {
+            await invoke("delete_pattern", {
+                patternId: deleteTarget.id,
+            });
+
+            setOpenedPattern((current) =>
+                current && current.id === deleteTarget.id ? null : current
+            );
+
+            cancelDelete();
+            await refreshPatterns();
+            pushToast("Diseño eliminado correctamente", "success");
+        } catch (error) {
+            const message = String(error.message || error);
+            setOpenError(message);
+            pushToast("No se pudo eliminar: " + message, "error");
+            cancelDelete();
+        }
+    }, [deleteTarget, cancelDelete, refreshPatterns, pushToast]);
 
     const filteredPatterns = savedPatterns.filter((record) => {
         const query = patternSearch.trim().toLowerCase();
@@ -526,17 +584,8 @@ const Editor = () => {
     return (
         <div className="flex h-screen flex-col bg-stone-900">
             <ToolSelector
-                patternType={patternType}
-                setPatternType={setPatternType}
-
                 tool={tool}
                 setTool={setTool}
-
-                width={width}
-                height={height}
-                resizePattern={resizePattern}
-
-                newPattern={newPattern}
 
                 undo={handleUndo}
                 redo={handleRedo}
@@ -548,7 +597,7 @@ const Editor = () => {
             <div className="flex min-h-0 flex-1 gap-3">
                 <PatternSidebar
                     patternType={patternType}
-                    setPatternType={setPatternType}
+                    setPatternType={changePatternType}
                     width={width}
                     height={height}
                     resizePattern={resizePattern}
@@ -561,6 +610,7 @@ const Editor = () => {
                     saveCurrentPattern={saveCurrentPattern}
                     openedPattern={openedPattern}
                     openPatterns={openPatterns}
+                    isDirty={isDirty}
                 />
 
                 <div className="flex-1 min-w-0">
@@ -570,6 +620,7 @@ const Editor = () => {
                         pattern={pattern}
                         patternType={patternType}
                         patternName={openedPattern?.name}
+                        isDirty={isDirty}
                         tool={tool}
 
                         paint={paint}
@@ -597,21 +648,29 @@ const Editor = () => {
             {showOpenDialog && (
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                    onMouseDown={() => setShowOpenDialog(false)}
+                    onMouseDown={() => {
+                        cancelRenaming();
+                        cancelDelete();
+                        setShowOpenDialog(false);
+                    }}
                 >
                     <div
-                        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg bg-stone-800 p-6 text-stone-100 shadow-xl"
+                        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg bg-stone-800 border border-stone-600 p-6 text-stone-100 shadow-xl"
                         onMouseDown={(event) => event.stopPropagation()}
                     >
                         <div className="flex items-center justify-between gap-4">
-                            <h2 className="text-lg font-semibold">Abrir patrón</h2>
+                            <h2 className="font-semibold uppercase text-sm">Abrir diseño</h2>
                             <button
                                 type="button"
-                                onClick={() => setShowOpenDialog(false)}
+                                onClick={() => {
+                                    cancelRenaming();
+                                    cancelDelete();
+                                    setShowOpenDialog(false);
+                                }}
                                 className="text-xl text-stone-300 hover:text-white"
                                 aria-label="Cerrar"
                             >
-                                ×
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
                             </button>
                         </div>
 
@@ -619,7 +678,7 @@ const Editor = () => {
                             type="search"
                             value={patternSearch}
                             onChange={(event) => setPatternSearch(event.target.value)}
-                            placeholder="Buscar por nombre o tipo..."
+                            placeholder="Buscar..."
                             className="mt-4 rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none focus:border-blue-400"
                         />
 
@@ -627,33 +686,161 @@ const Editor = () => {
                             <p className="mt-4 text-sm text-red-300">{openError}</p>
                         ) : filteredPatterns.length === 0 ? (
                             <p className="mt-6 text-center text-sm text-stone-300">
-                                No hay patrones guardados.
+                                No hay diseños guardados.
                             </p>
                         ) : (
                             <div className="mt-4 overflow-y-auto">
                                 {filteredPatterns.map((record) => (
-                                    <button
+                                    <div
                                         key={record.id}
-                                        type="button"
-                                        onClick={() => loadPattern(record)}
-                                        className="mb-2 flex w-full items-center justify-between rounded border border-stone-700 bg-stone-900/60 px-3 py-3 text-left hover:border-blue-400 hover:bg-stone-700"
+                                        className="mb-2 rounded border border-stone-700 bg-stone-900/60 px-3 py-3 hover:border-stone-500"
                                     >
-                                        <span>
-                                            <span className="block font-medium">{record.name}</span>
-                                            <span className="block text-xs text-stone-400">
-                                                {formatPatternType(record.pattern_type)} · {record.width} × {record.height}
-                                            </span>
-                                        </span>
-                                        <span className="text-xs text-stone-400">
-                                            {record.beads.length} beads
-                                        </span>
-                                    </button>
+                                        {renamingId === record.id ? (
+                                            <div className="flex flex-col gap-2">
+                                                <input
+                                                    type="text"
+                                                    autoFocus
+                                                    value={renamingValue}
+                                                    onChange={(event) => setRenamingValue(event.target.value)}
+                                                    onKeyDown={(event) => {
+                                                        if (event.key === "Enter") {
+                                                            event.preventDefault();
+                                                            commitRenaming();
+                                                        } else if (event.key === "Escape") {
+                                                            event.preventDefault();
+                                                            cancelRenaming();
+                                                        }
+                                                    }}
+                                                    className="w-full rounded border border-blue-400 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none"
+                                                />
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={cancelRenaming}
+                                                        className="rounded border border-stone-600 bg-stone-800 px-3 py-1 text-xs text-stone-200 hover:bg-stone-700"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={commitRenaming}
+                                                        className="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-500"
+                                                    >
+                                                        Guardar
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => loadPattern(record)}
+                                                    className="flex-1 text-left hover:opacity-90"
+                                                >
+                                                    <span className="block font-medium uppercase">
+                                                        {record.name}
+                                                    </span>
+                                                    <span className="block text-xs text-stone-400">
+                                                        {formatPatternType(record.pattern_type)} · {record.width} × {record.height}
+                                                    </span>
+                                                </button>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-xs text-stone-400 whitespace-nowrap">
+                                                        {record.beads.length} beads
+                                                    </span>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={(event) => {
+                                                                event.stopPropagation();
+                                                                startRenaming(record);
+                                                            }}
+                                                            className="rounded p-1.5 text-stone-300 hover:bg-stone-700 hover:text-blue-400"
+                                                            aria-label="Renombrar"
+                                                            title="Renombrar"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={(event) => {
+                                                                event.stopPropagation();
+                                                                requestDelete(record);
+                                                            }}
+                                                            className="rounded p-1.5 text-stone-300 hover:bg-stone-700 hover:text-red-400"
+                                                            aria-label="Eliminar"
+                                                            title="Eliminar"
+                                                        >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
                     </div>
                 </div>
             )}
+
+            {deleteTarget && (
+                <div
+                    className="fixed inset-0 z-60 flex items-center justify-center bg-black/60 p-4"
+                    onMouseDown={cancelDelete}
+                >
+                    <div
+                        className="flex w-full max-w-sm flex-col rounded-lg bg-stone-800 border border-stone-600 p-6 text-stone-100 shadow-xl"
+                        onMouseDown={(event) => event.stopPropagation()}
+                    >
+                        <h3 className="font-semibold uppercase text-sm">
+                            Eliminar diseño
+                        </h3>
+                        <p className="mt-4 text-sm text-stone-300">
+                            ¿Estás seguro que deseas eliminar{" "}
+                            <span className="font-medium text-stone-100">
+                                "{deleteTarget.name}"
+                            </span>
+                            ? Esta acción no se puede deshacer.
+                        </p>
+                        <div className="mt-6 flex justify-end gap-2">
+                            <button
+                                type="button"
+                                onClick={cancelDelete}
+                                className="rounded border border-stone-600 bg-stone-700 px-4 py-2 text-sm text-stone-100 hover:bg-stone-600"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmDelete}
+                                className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500"
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="pointer-events-none fixed bottom-4 left-1/2 z-70 flex -translate-x-1/2 flex-col items-center gap-2">
+                {toasts.map((t) => (
+                    <div
+                        key={t.id}
+                        className={`pointer-events-auto rounded-md border px-4 py-2 text-sm shadow-lg backdrop-blur ${
+                            t.variant === "error"
+                                ? "border-red-500/50 bg-red-950/90 text-red-100"
+                                : t.variant === "success"
+                                ? "border-emerald-500/50 bg-emerald-950/90 text-emerald-100"
+                                : "border-sky-500/50 bg-sky-950/90 text-sky-100"
+                        }`}
+                        role={t.variant === "error" ? "alert" : "status"}
+                    >
+                        {t.message}
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

@@ -1,6 +1,6 @@
 const patternTypes = [
     { value: "peyote", label: "Peyote" },
-    { value: "grid", label: "Telar" },
+    { value: "telar", label: "Telar" },
 ];
 
 const PatternTypeSelector = ({

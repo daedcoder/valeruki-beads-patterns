@@ -12,6 +12,7 @@ const PatternCanvas = ({
     pattern,
     patternType,
     patternName,
+    isDirty,
     tool,
 
     paint,
@@ -130,8 +131,17 @@ const PatternCanvas = ({
             }}
         >
             <div className="flex flex-col">
-                <div className="mb-2 text-left text-sm font-medium text-stone-300">
-                    {patternName || "Diseño sin guardar"}
+                <div className="mb-2 flex items-center gap-2 text-left text-sm font-medium text-stone-300">
+                    <span className="text-lg font-bold uppercase">{patternName || "Diseño sin guardar"}</span>
+                    {isDirty && (
+                        <span
+                            className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 pb-0.5 pt-1 text-[10px] font-medium uppercase tracking-wide text-amber-300 ring-1 ring-inset ring-amber-500/40"
+                            title="Tienes cambios sin guardar"
+                        >
+                            <span className="h-1.5 w-1.5 rounded-full mb-0.5 bg-amber-400" />
+                            Cambios sin guardar
+                        </span>
+                    )}
                 </div>
                 <svg
                     width={svgWidth}

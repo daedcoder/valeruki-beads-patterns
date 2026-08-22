@@ -16,7 +16,7 @@ const EditorToolbar = ({
         {/* PINTAR */}
         <button
           onClick={() => setTool("pencil")}
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "pencil"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "pencil"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
             }`}
@@ -47,7 +47,7 @@ const EditorToolbar = ({
         {/* BORRADOR */}
         <button
           onClick={() => setTool("eraser")}
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "eraser"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "eraser"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300"
             }`}
@@ -79,7 +79,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("add-column")
           }
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "add-column"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "add-column"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
             }`}
@@ -111,7 +111,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-column")
           }
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "remove-column"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "remove-column"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300"
             }`}
@@ -141,7 +141,7 @@ const EditorToolbar = ({
         {/* AGREGAR FILA */}
         <button
           onClick={() => setTool("add-row")}
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "add-row"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "add-row"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
             }`}
@@ -173,7 +173,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-row")
           }
-          className={`border-2 border-stone-700 hover:border-white rounded p-2 text-sm ${tool === "remove-row"
+          className={`border-2 border-stone-700 hover:bg-stone-600 rounded p-2 text-sm ${tool === "remove-row"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300 "
             }`}
@@ -203,7 +203,7 @@ const EditorToolbar = ({
         {/* BALDE */}
         <button
           onClick={() => setTool("fill")}
-          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "fill"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "fill"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
             }`}
@@ -238,7 +238,7 @@ const EditorToolbar = ({
           disabled={!canUndo}
           title="Deshacer"
           className={`rounded border-2 border-stone-700 p-2 text-sm ${canUndo
-              ? "bg-stone-700 text-white hover:border-white"
+              ? "bg-stone-700 text-white hover:bg-stone-600"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
             }`}
         >
@@ -265,7 +265,7 @@ const EditorToolbar = ({
           disabled={!canRedo}
           title="Rehacer"
           className={`rounded border-2 p-2 text-sm ${canRedo
-              ? "bg-stone-700 text-white border-stone-700 hover:border-white"
+              ? "bg-stone-700 text-white border-stone-700 hover:bg-stone-600"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
             }`}
         >

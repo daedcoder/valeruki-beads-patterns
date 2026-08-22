@@ -44,7 +44,7 @@ const ColorPalette = ({
                                 setColor(item.value);
                                 setTool("pencil");
                             }}
-                            className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm transition ${isSelected
+                            className={`flex items-center gap-2 rounded-md border px-2 py-1.5 text-left text-sm ${isSelected
                                     ? "border-blue-400 bg-stone-800 text-white"
                                     : "border-stone-600 bg-stone-800/60 text-stone-200 hover:bg-stone-700"
                                 }`}
