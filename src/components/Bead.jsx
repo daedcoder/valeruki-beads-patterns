@@ -45,8 +45,9 @@ const Bead = memo(
                     height={BEAD_HEIGHT}
                     rx={2}
                     fill={color || "#ffffff"}
-                    stroke="#A1A1A1"
+                    stroke="#525252"
                     strokeWidth="1"
+                    className=" hover:stroke-stone-900 hover:stroke-2"
                 />
 
                 {color && (

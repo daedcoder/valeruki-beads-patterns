@@ -1,40 +1,36 @@
 const patternTypes = [
-  { value: "peyote", label: "Peyote" },
-  { value: "grid", label: "Telar" },
+    { value: "peyote", label: "Peyote" },
+    { value: "grid", label: "Telar" },
 ];
 
 const PatternTypeSelector = ({
-  patternType,
-  setPatternType,
+    patternType,
+    setPatternType,
 }) => {
-  return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="text-sm text-stone-100 mb-2">
-        Tipo
-      </legend>
+    return (
+        <fieldset className="flex flex-col gap-2">
+            <div className="grid grid-cols-2 gap-2 rounded-lg bg-stone-800/50 p-1">
+                {patternTypes.map(({ value, label }) => {
+                    const isSelected = patternType === value;
 
-      <div className="flex gap-2">
-        {patternTypes.map(({ value, label }) => {
-          const isSelected = patternType === value;
-
-          return (
-            <button
-              key={value}
-              type="button"
-              aria-pressed={isSelected}
-              onClick={() => setPatternType(value)}
-              className={`flex-1 rounded border-2 px-3 py-1.5 text-sm transition ${isSelected
-                ? "border-white bg-stone-200 text-stone-800"
-                : "border-stone-500 bg-stone-700 text-stone-200 hover:border-stone-300"
-                }`}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-    </fieldset>
-  );
+                    return (
+                        <button
+                            key={value}
+                            type="button"
+                            aria-pressed={isSelected}
+                            onClick={() => setPatternType(value)}
+                            className={`rounded-md px-3 py-2 text-sm font-medium transition ${isSelected
+                                ? "bg-sky-300 text-stone-900 shadow-sm"
+                                : "bg-transparent text-stone-200 hover:bg-stone-600/70"
+                                }`}
+                        >
+                            {label}
+                        </button>
+                    );
+                })}
+            </div>
+        </fieldset>
+    );
 };
 
 export default PatternTypeSelector;

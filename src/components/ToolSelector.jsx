@@ -3,33 +3,23 @@ import { useState } from "react";
 const EditorToolbar = ({
   tool,
   setTool,
-  newPattern,
-
   undo,
   redo,
   canUndo,
   canRedo,
 }) => {
-  const [showNewDialog, setShowNewDialog] =
-    useState(false);
-
-  const handleNewPattern = () => {
-    newPattern();
-    setShowNewDialog(false);
-  };
 
   return (
     <>
-      <div className="fixed top-1 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-2 bg-stone-600 py-2 px-4 rounded-lg shadow shadow-stone-700 overflow-hidden">
+      <div className="fixed top-2 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-2 bg-stone-700 py-2 px-3 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500">
 
         {/* PINTAR */}
         <button
           onClick={() => setTool("pencil")}
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "pencil"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "pencil"
               ? "bg-stone-200 border-white"
-              : "bg-stone-600 text-white"
-          }`}
+              : "bg-stone-700 text-white"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -57,11 +47,10 @@ const EditorToolbar = ({
         {/* BORRADOR */}
         <button
           onClick={() => setTool("eraser")}
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "eraser"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "eraser"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-600 text-red-300"
-          }`}
+              : "bg-stone-700 text-red-300"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -90,11 +79,10 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("add-column")
           }
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "add-column"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "add-column"
               ? "bg-stone-200 border-white"
-              : "bg-stone-600 text-white"
-          }`}
+              : "bg-stone-700 text-white"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -123,11 +111,10 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-column")
           }
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "remove-column"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "remove-column"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-600 text-red-300"
-          }`}
+              : "bg-stone-700 text-red-300"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -154,11 +141,10 @@ const EditorToolbar = ({
         {/* AGREGAR FILA */}
         <button
           onClick={() => setTool("add-row")}
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "add-row"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "add-row"
               ? "bg-stone-200 border-white"
-              : "bg-stone-600 text-white"
-          }`}
+              : "bg-stone-700 text-white"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -187,11 +173,10 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-row")
           }
-          className={`border-2 border-stone-600 hover:border-white rounded p-2 text-sm ${
-            tool === "remove-row"
+          className={`border-2 border-stone-700 hover:border-white rounded p-2 text-sm ${tool === "remove-row"
               ? "bg-stone-200 text-red-700 border-white"
-              : "bg-stone-600 text-red-300 "
-          }`}
+              : "bg-stone-700 text-red-300 "
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -218,11 +203,10 @@ const EditorToolbar = ({
         {/* BALDE */}
         <button
           onClick={() => setTool("fill")}
-          className={`rounded border-2 border-stone-600 hover:border-white p-2 text-sm ${
-            tool === "fill"
+          className={`rounded border-2 border-stone-700 hover:border-white p-2 text-sm ${tool === "fill"
               ? "bg-stone-200 border-white"
-              : "bg-stone-600 text-white"
-          }`}
+              : "bg-stone-700 text-white"
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -253,11 +237,10 @@ const EditorToolbar = ({
           onClick={undo}
           disabled={!canUndo}
           title="Deshacer"
-          className={`rounded border-2 border-stone-600 p-2 text-sm ${
-            canUndo
-              ? "bg-stone-600 text-white hover:border-white"
+          className={`rounded border-2 border-stone-700 p-2 text-sm ${canUndo
+              ? "bg-stone-700 text-white hover:border-white"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
-          }`}
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -281,11 +264,10 @@ const EditorToolbar = ({
           onClick={redo}
           disabled={!canRedo}
           title="Rehacer"
-          className={`rounded border-2 p-2 text-sm ${
-            canRedo
-              ? "bg-stone-600 text-white border-stone-600 hover:border-white"
+          className={`rounded border-2 p-2 text-sm ${canRedo
+              ? "bg-stone-700 text-white border-stone-700 hover:border-white"
               : "bg-stone-700 text-stone-400 border-stone-700 cursor-not-allowed"
-          }`}
+            }`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -303,86 +285,7 @@ const EditorToolbar = ({
             <path d="M19 10h-11a4 4 0 1 0 0 8h1" />
           </svg>
         </button>
-
-        <div className="h-12 w-px bg-stone-500" />
-
-        {/* NUEVO */}
-        <button
-          onClick={() =>
-            setShowNewDialog(true)
-          }
-          title="Nuevo patrón"
-          className="rounded border-2 p-2 text-sm bg-stone-600 text-white border-stone-600 hover:border-white"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path
-              stroke="none"
-              d="M0 0h24v24H0z"
-              fill="none"
-            />
-            <path d="M19 22.5a4.75 4.75 0 0 1 3.5 -3.5a4.75 4.75 0 0 1 -3.5 -3.5a4.75 4.75 0 0 1 -3.5 3.5a4.75 4.75 0 0 1 3.5 3.5" />
-            <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-            <path d="M12 21h-5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v3.5" />
-          </svg>
-        </button>
       </div>
-
-      {/* CONFIRMACIÓN NUEVO */}
-      {showNewDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onMouseDown={() =>
-            setShowNewDialog(false)
-          }
-        >
-          <div
-            className="w-full max-w-sm rounded-lg bg-white p-6 shadow-xl"
-            onMouseDown={(e) =>
-              e.stopPropagation()
-            }
-          >
-            <h2 className="text-lg font-semibold text-stone-800">
-              ¿Crear un nuevo patrón?
-            </h2>
-
-            <p className="mt-2 text-sm text-stone-600">
-              Se borrará todo el contenido
-              del patrón actual.
-              Esta acción se puede deshacer
-              usando la herramienta
-              Deshacer.
-            </p>
-
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                onClick={() =>
-                  setShowNewDialog(false)
-                }
-                className="rounded border border-stone-300 px-4 py-2 text-sm text-stone-700 hover:bg-stone-100"
-              >
-                Cancelar
-              </button>
-
-              <button
-                onClick={handleNewPattern}
-                className="rounded bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-              >
-                Sí, borrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 
 import COLORS from "../data/colors";
 import { usePatternHistory } from "../hooks/usePatternHistory";
@@ -24,19 +25,31 @@ const createPattern = (width, height) =>
 const findColorName = (value) => {
     if (!value) return "Vacío";
 
+    const normalizedValue =
+        typeof value === "string"
+            ? value.toLowerCase()
+            : "";
+
+    if (!normalizedValue) {
+        return "Vacío";
+    }
+
     const match = COLORS.find(
         (color) =>
             color.value.toLowerCase() ===
-            value.toLowerCase()
+            normalizedValue
     );
 
     return match ? match.name : "Personalizado";
 };
 
+const formatPatternType = (value) =>
+    value === "peyote" ? "Peyote" : value;
+
 const Editor = () => {
     const [patternType, setPatternType] = useState("peyote");
 
-    const [color, setColor] = useState(COLORS[0]);
+    const [color, setColor] = useState(COLORS[0].value);
     const [tool, setTool] = useState("pencil");
 
     const [width, setWidth] = useState(INITIAL_WIDTH);
@@ -45,6 +58,11 @@ const Editor = () => {
     const [pattern, setPattern] = useState(() =>
         createPattern(INITIAL_WIDTH, INITIAL_HEIGHT)
     );
+    const [openedPattern, setOpenedPattern] = useState(null);
+    const [savedPatterns, setSavedPatterns] = useState([]);
+    const [showOpenDialog, setShowOpenDialog] = useState(false);
+    const [patternSearch, setPatternSearch] = useState("");
+    const [openError, setOpenError] = useState("");
 
     const {
         canUndo,
@@ -383,6 +401,7 @@ const Editor = () => {
         setPattern(next);
         setWidth(DEFAULT_PATTERN_WIDTH);
         setHeight(DEFAULT_PATTERN_HEIGHT);
+        setOpenedPattern(null);
         resetHistory(next, DEFAULT_PATTERN_WIDTH, DEFAULT_PATTERN_HEIGHT);
         setTool("pencil");
     }, [
@@ -431,8 +450,81 @@ const Editor = () => {
         [commitHistory]
     );
 
+    const savePattern = useCallback(async (name) => {
+        const beads = pattern.flatMap((row, rowIndex) =>
+            row.flatMap((cell, colIndex) =>
+                cell
+                    ? [{ row: rowIndex, col: colIndex, color: cell }]
+                    : []
+            )
+        );
+
+        const savedId = await invoke("save_pattern", {
+            input: {
+                pattern_id: openedPattern?.id ?? null,
+                name,
+                pattern_type: patternType,
+                width,
+                height,
+                beads,
+            },
+        });
+
+        setOpenedPattern((current) => current ?? { id: savedId, name });
+        return savedId;
+    }, [pattern, patternType, width, height, openedPattern]);
+
+    const saveCurrentPattern = useCallback(() => {
+        if (!openedPattern) return;
+
+        savePattern(openedPattern.name).catch((error) => {
+            console.error("No se pudo actualizar el patrón:", error);
+        });
+    }, [openedPattern, savePattern]);
+
+    const openPatterns = useCallback(async () => {
+        setOpenError("");
+        setPatternSearch("");
+
+        try {
+            const records = await invoke("list_patterns");
+            setSavedPatterns(records);
+            setShowOpenDialog(true);
+        } catch (error) {
+            setOpenError(String(error));
+            setShowOpenDialog(true);
+        }
+    }, []);
+
+    const loadPattern = useCallback((record) => {
+        const next = createPattern(record.width, record.height);
+
+        for (const bead of record.beads) {
+            if (
+                bead.row >= 0 && bead.row < record.height &&
+                bead.col >= 0 && bead.col < record.width
+            ) {
+                next[bead.row][bead.col] = bead.color;
+            }
+        }
+
+        setPattern(next);
+        setWidth(record.width);
+        setHeight(record.height);
+        setPatternType(record.pattern_type);
+        setOpenedPattern({ id: record.id, name: record.name });
+        resetHistory(next, record.width, record.height);
+        setTool("pencil");
+        setShowOpenDialog(false);
+    }, [resetHistory]);
+
+    const filteredPatterns = savedPatterns.filter((record) => {
+        const query = patternSearch.trim().toLowerCase();
+        return !query || `${record.name} ${record.pattern_type}`.toLowerCase().includes(query);
+    });
+
     return (
-        <div className="flex h-screen flex-col bg-stone-500">
+        <div className="flex h-screen flex-col bg-stone-900">
             <ToolSelector
                 patternType={patternType}
                 setPatternType={setPatternType}
@@ -464,6 +556,11 @@ const Editor = () => {
                     color={color}
                     setColor={setColor}
                     setTool={setTool}
+                    newPattern={newPattern}
+                    savePattern={savePattern}
+                    saveCurrentPattern={saveCurrentPattern}
+                    openedPattern={openedPattern}
+                    openPatterns={openPatterns}
                 />
 
                 <div className="flex-1 min-w-0">
@@ -472,6 +569,7 @@ const Editor = () => {
                         height={height}
                         pattern={pattern}
                         patternType={patternType}
+                        patternName={openedPattern?.name}
                         tool={tool}
 
                         paint={paint}
@@ -495,6 +593,67 @@ const Editor = () => {
                     setTool={setTool}
                 />
             </div>
+
+            {showOpenDialog && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                    onMouseDown={() => setShowOpenDialog(false)}
+                >
+                    <div
+                        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg bg-stone-800 p-6 text-stone-100 shadow-xl"
+                        onMouseDown={(event) => event.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between gap-4">
+                            <h2 className="text-lg font-semibold">Abrir patrón</h2>
+                            <button
+                                type="button"
+                                onClick={() => setShowOpenDialog(false)}
+                                className="text-xl text-stone-300 hover:text-white"
+                                aria-label="Cerrar"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <input
+                            type="search"
+                            value={patternSearch}
+                            onChange={(event) => setPatternSearch(event.target.value)}
+                            placeholder="Buscar por nombre o tipo..."
+                            className="mt-4 rounded border border-stone-600 bg-stone-900 px-3 py-2 text-sm text-stone-100 outline-none focus:border-blue-400"
+                        />
+
+                        {openError ? (
+                            <p className="mt-4 text-sm text-red-300">{openError}</p>
+                        ) : filteredPatterns.length === 0 ? (
+                            <p className="mt-6 text-center text-sm text-stone-300">
+                                No hay patrones guardados.
+                            </p>
+                        ) : (
+                            <div className="mt-4 overflow-y-auto">
+                                {filteredPatterns.map((record) => (
+                                    <button
+                                        key={record.id}
+                                        type="button"
+                                        onClick={() => loadPattern(record)}
+                                        className="mb-2 flex w-full items-center justify-between rounded border border-stone-700 bg-stone-900/60 px-3 py-3 text-left hover:border-blue-400 hover:bg-stone-700"
+                                    >
+                                        <span>
+                                            <span className="block font-medium">{record.name}</span>
+                                            <span className="block text-xs text-stone-400">
+                                                {formatPatternType(record.pattern_type)} · {record.width} × {record.height}
+                                            </span>
+                                        </span>
+                                        <span className="text-xs text-stone-400">
+                                            {record.beads.length} beads
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
