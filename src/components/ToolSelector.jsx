@@ -16,6 +16,7 @@ const EditorToolbar = ({
         {/* PINTAR */}
         <button
           onClick={() => setTool("pencil")}
+          title="Dibujar"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "pencil"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
@@ -47,6 +48,7 @@ const EditorToolbar = ({
         {/* BORRADOR */}
         <button
           onClick={() => setTool("eraser")}
+          title="Borrar"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "eraser"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300"
@@ -79,6 +81,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("add-column")
           }
+          title="Agregar Columna"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "add-column"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
@@ -111,6 +114,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-column")
           }
+          title="Eliminar Columna"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "remove-column"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300"
@@ -141,6 +145,7 @@ const EditorToolbar = ({
         {/* AGREGAR FILA */}
         <button
           onClick={() => setTool("add-row")}
+          title="Agregar Fila"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "add-row"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
@@ -173,6 +178,7 @@ const EditorToolbar = ({
           onClick={() =>
             setTool("remove-row")
           }
+          title="Eliminar Fila"
           className={`border-2 border-stone-700 hover:bg-stone-600 rounded p-2 text-sm ${tool === "remove-row"
               ? "bg-stone-200 text-red-700 border-white"
               : "bg-stone-700 text-red-300 "
@@ -203,6 +209,7 @@ const EditorToolbar = ({
         {/* BALDE */}
         <button
           onClick={() => setTool("fill")}
+          title="Rellenar"
           className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "fill"
               ? "bg-stone-200 border-white"
               : "bg-stone-700 text-white"
@@ -227,6 +234,34 @@ const EditorToolbar = ({
             <path d="M5 16l1.465 1.638a2 2 0 1 1 -3.015 .099l1.55 -1.737" />
             <path d="M13.737 9.737c2.299 -2.3 3.23 -5.095 2.081 -6.245c-1.15 -1.15 -3.945 -.217 -6.244 2.082c-2.3 2.299 -3.231 5.095 -2.082 6.244c1.15 1.15 3.946 .218 6.245 -2.081" />
             <path d="M7.492 11.818c.362 .362 .768 .676 1.208 .934l6.895 4.047c1.078 .557 2.255 -.075 3.692 -1.512c1.437 -1.437 2.07 -2.614 1.512 -3.692c-.372 -.718 -1.72 -3.017 -4.047 -6.895a6.015 6.015 0 0 0 -.934 -1.208" />
+          </svg>
+        </button>
+
+        {/* REEMPLAZAR COLOR */}
+        <button
+          onClick={() => setTool("replace")}
+          title="Reemplazar color"
+          className={`rounded border-2 border-stone-700 hover:bg-stone-600 p-2 text-sm ${tool === "replace"
+              ? "bg-stone-200 border-white"
+              : "bg-stone-700 text-white"
+            }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M3 17h5l1.67 -2.386m3.66 -5.227l1.67 -2.387h6" />
+            <path d="M18 4l3 3l-3 3" />
+            <path d="M3 7h5l7 10h6" />
+            <path d="M18 20l3 -3l-3 -3" />
           </svg>
         </button>
 

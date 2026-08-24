@@ -1,2 +1,2 @@
-export const BEAD_WIDTH = 12;
-export const BEAD_HEIGHT = 13;
+export const BEAD_WIDTH = 14;
+export const BEAD_HEIGHT = 15;

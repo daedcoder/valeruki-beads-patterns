@@ -17,6 +17,7 @@ const PatternCanvas = ({
 
     paint,
     fillArea,
+    replaceColor,
 
     addColumn,
     removeColumn,
@@ -48,6 +49,11 @@ const PatternCanvas = ({
                 return;
             }
 
+            if (tool === "replace") {
+                replaceColor(row, col);
+                return;
+            }
+
             if (tool === "add-column") {
                 addColumn(col);
                 return;
@@ -71,6 +77,7 @@ const PatternCanvas = ({
             tool,
             paint,
             fillArea,
+            replaceColor,
             addColumn,
             removeColumn,
             addRow,
@@ -149,6 +156,18 @@ const PatternCanvas = ({
                     className="rounded bg-white shadow"
                     onPointerDown={handlePaintStart}
                 >
+                    {Array.from({ length: width }, (_, columnIndex) => (
+                        <text
+                            key={`column-number-${columnIndex}`}
+                            x={PADDING + columnIndex * (BEAD_WIDTH + GAP) + BEAD_WIDTH / 2}
+                            y={10}
+                            textAnchor="middle"
+                            fontSize="7"
+                            fill="#525252"
+                        >
+                            {columnIndex + 1}
+                        </text>
+                    ))}
                     {pattern.map(
                         (row, rowIndex) => (
                             <PatternRow

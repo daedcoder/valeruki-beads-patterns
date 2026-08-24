@@ -236,6 +236,33 @@ const Editor = () => {
     );
 
     // --------------------------------------------------
+    // REEMPLAZAR COLOR
+    // --------------------------------------------------
+
+    const replaceColor = useCallback(
+        (row, col) => {
+            const prev = patternRef.current;
+            const sourceColor = prev[row]?.[col];
+
+            if (!sourceColor || sourceColor === color) {
+                return;
+            }
+
+            const next = prev.map((currentRow) =>
+                currentRow.map((beadColor) =>
+                    beadColor === sourceColor ? color : beadColor
+                )
+            );
+
+            setPattern(next);
+            setTool("pencil");
+            setIsDirty(true);
+            commitHistory(next, widthRef.current, heightRef.current);
+        },
+        [color, commitHistory]
+    );
+
+    // --------------------------------------------------
     // AGREGAR COLUMNA
     // --------------------------------------------------
 
@@ -625,6 +652,7 @@ const Editor = () => {
 
                         paint={paint}
                         fillArea={fillArea}
+                        replaceColor={replaceColor}
 
                         addColumn={addColumn}
                         removeColumn={removeColumn}

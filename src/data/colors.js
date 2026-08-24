@@ -1,5 +1,6 @@
 const COLORS = [
   { name: "Negro", value: "#111827" },
+  { name: "Dorado", value: "#FF9E00" },
   { name: "Rojo", value: "#ef4444" },
   { name: "Rojo oscuro", value: "#991b1b" },
   { name: "Rojo vino", value: "#7f1d1d" },
