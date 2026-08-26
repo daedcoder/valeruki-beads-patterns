@@ -39,14 +39,14 @@ const Bead = memo(
                 className="cursor-pointer"
             >
                 <rect
-                    x={x}
-                    y={y}
-                    width={BEAD_WIDTH}
-                    height={BEAD_HEIGHT}
-                    rx={2}
+                    x={x + 0.5}
+                    y={y + 0.5}
+                    width={BEAD_WIDTH - 1}
+                    height={BEAD_HEIGHT - 1}
+                    rx={1.5}
                     fill={color || "#ffffff"}
-                    stroke="#525252"
-                    strokeWidth="1"
+                    stroke={color ? "#080808" : "#D6D6D6"}
+                    strokeWidth="0.6"
                     className=" hover:stroke-stone-900 hover:stroke-2"
                 />
 
@@ -57,7 +57,7 @@ const Bead = memo(
                         x2={x + BEAD_WIDTH - 2}
                         y2={y + 2}
                         stroke="white"
-                        strokeOpacity="0.25"
+                        strokeOpacity="0.2"
                     />
                 )}
             </g>
