@@ -1,7 +1,7 @@
 export const MAX_PATTERN_WIDTH = 115;
 export const MAX_PATTERN_HEIGHT = 64;
-export const DEFAULT_PATTERN_WIDTH = 80;
-export const DEFAULT_PATTERN_HEIGHT = 45;
+export const DEFAULT_PATTERN_WIDTH = 50;
+export const DEFAULT_PATTERN_HEIGHT = 25;
 
 export const clampPatternSize = (width, height) => {
   const safeWidth = Number.isFinite(width)

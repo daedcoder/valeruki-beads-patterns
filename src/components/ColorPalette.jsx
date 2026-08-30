@@ -32,7 +32,7 @@ const ColorPalette = ({
                 />
             </div>
 
-            <div className="flex max-h-[calc(100vh-117px)] flex-col gap-2 overflow-y-auto pr-2.5">
+            <div className="flex max-h-[calc(100vh-164px)] flex-col gap-2 overflow-y-auto pr-2.5">
                 {filteredColors.map((item) => {
                     const isSelected = color === item.value;
 
@@ -50,10 +50,17 @@ const ColorPalette = ({
                                 }`}
                         >
                             <span
-                                className="h-6 w-6 rounded border border-stone-300"
-                                style={{ backgroundColor: item.value }}
+                                className="relative h-6 w-6 overflow-hidden rounded border border-stone-300"
+                                style={{
+                                    backgroundColor: item.value,
+                                    backgroundImage: "linear-gradient(to right, rgba(0, 0, 0, 0.4) 0%, rgba(255, 255, 255, 0.05) 65%, rgba(0, 0, 0, 0.4) 100%), linear-gradient(to bottom, transparent 65%, rgba(0, 0, 0, 0.3) 100%)",
+                                }}
                                 aria-label={item.name}
-                            />
+                            >
+                                <span
+                                    className="pointer-events-none absolute left-1.5 right-1.5 top-1.5 h-[22%] rounded-[3px] bg-white/20"
+                                />
+                            </span>
                             <span className="truncate">{item.name}</span>
                         </button>
                     );

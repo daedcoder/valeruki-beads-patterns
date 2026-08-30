@@ -1,7 +1,6 @@
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use std::{fs, path::PathBuf};
-use tauri::Manager;
+use std::{env, fs, path::PathBuf};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -41,25 +40,18 @@ struct PatternRecord {
     beads: Vec<BeadData>,
 }
 
-fn database_path(app: &tauri::AppHandle) -> Result<PathBuf, String> {
-    if cfg!(debug_assertions) {
-        return Ok(PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../src/database/patterns.db"));
-    }
+fn database_path() -> Result<PathBuf, String> {
+    let executable_dir = env::current_exe()
+        .map_err(|error| format!("No se pudo obtener la ubicación del ejecutable: {error}"))?
+        .parent()
+        .map(PathBuf::from)
+        .ok_or_else(|| "El ejecutable no tiene un directorio padre válido".to_string())?;
 
-    let data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|error| format!("No se pudo obtener el directorio de datos: {error}"))?;
-
-    fs::create_dir_all(&data_dir)
-        .map_err(|error| format!("No se pudo crear el directorio de datos: {error}"))?;
-
-    Ok(data_dir.join("patterns.db"))
+    Ok(executable_dir.join("data").join("patterns.db"))
 }
 
-fn open_database(app: &tauri::AppHandle) -> Result<(Connection, PathBuf), String> {
-    let path = database_path(app)?;
+fn open_database() -> Result<(Connection, PathBuf), String> {
+    let path = database_path()?;
 
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent)
@@ -90,8 +82,8 @@ fn open_database(app: &tauri::AppHandle) -> Result<(Connection, PathBuf), String
 }
 
 #[tauri::command]
-fn initialize_database(app: tauri::AppHandle) -> Result<DatabaseStatus, String> {
-    let (_, database_path) = open_database(&app)?;
+fn initialize_database() -> Result<DatabaseStatus, String> {
+    let (_, database_path) = open_database()?;
 
     Ok(DatabaseStatus {
         path: database_path.to_string_lossy().into_owned(),
@@ -99,7 +91,7 @@ fn initialize_database(app: tauri::AppHandle) -> Result<DatabaseStatus, String> 
 }
 
 #[tauri::command]
-fn save_pattern(app: tauri::AppHandle, input: SavePatternInput) -> Result<i64, String> {
+fn save_pattern(input: SavePatternInput) -> Result<i64, String> {
     let name = input.name.trim();
     if name.is_empty() {
         return Err("El nombre del patrón es obligatorio".to_string());
@@ -111,7 +103,7 @@ fn save_pattern(app: tauri::AppHandle, input: SavePatternInput) -> Result<i64, S
 
     let cells = serde_json::to_string(&input.beads)
         .map_err(|error| format!("No se pudieron serializar las beads: {error}"))?;
-    let (connection, _) = open_database(&app)?;
+    let (connection, _) = open_database()?;
 
     let pattern_id = if let Some(pattern_id) = input.pattern_id {
         connection
@@ -120,7 +112,14 @@ fn save_pattern(app: tauri::AppHandle, input: SavePatternInput) -> Result<i64, S
                  SET name = ?1, pattern_type = ?2, width = ?3, height = ?4,
                      cells = ?5, updated_at = CURRENT_TIMESTAMP
                  WHERE id = ?6",
-                rusqlite::params![name, input.pattern_type, input.width, input.height, cells, pattern_id],
+                rusqlite::params![
+                    name,
+                    input.pattern_type,
+                    input.width,
+                    input.height,
+                    cells,
+                    pattern_id
+                ],
             )
             .map_err(|error| format!("No se pudo actualizar el patrón: {error}"))?;
 
@@ -144,8 +143,8 @@ fn save_pattern(app: tauri::AppHandle, input: SavePatternInput) -> Result<i64, S
 }
 
 #[tauri::command]
-fn list_patterns(app: tauri::AppHandle) -> Result<Vec<PatternRecord>, String> {
-    let (connection, _) = open_database(&app)?;
+fn list_patterns() -> Result<Vec<PatternRecord>, String> {
+    let (connection, _) = open_database()?;
     let mut statement = connection
         .prepare(
             "SELECT id, name, pattern_type, width, height, cells
@@ -181,13 +180,13 @@ fn list_patterns(app: tauri::AppHandle) -> Result<Vec<PatternRecord>, String> {
 }
 
 #[tauri::command]
-fn rename_pattern(app: tauri::AppHandle, pattern_id: i64, new_name: String) -> Result<(), String> {
+fn rename_pattern(pattern_id: i64, new_name: String) -> Result<(), String> {
     let trimmed_name = new_name.trim();
     if trimmed_name.is_empty() {
         return Err("El nombre del patrón es obligatorio".to_string());
     }
 
-    let (connection, _) = open_database(&app)?;
+    let (connection, _) = open_database()?;
     connection
         .execute(
             "UPDATE patterns SET name = ?1, updated_at = CURRENT_TIMESTAMP WHERE id = ?2",
@@ -203,8 +202,8 @@ fn rename_pattern(app: tauri::AppHandle, pattern_id: i64, new_name: String) -> R
 }
 
 #[tauri::command]
-fn delete_pattern(app: tauri::AppHandle, pattern_id: i64) -> Result<(), String> {
-    let (connection, _) = open_database(&app)?;
+fn delete_pattern(pattern_id: i64) -> Result<(), String> {
+    let (connection, _) = open_database()?;
     connection
         .execute(
             "DELETE FROM patterns WHERE id = ?1",

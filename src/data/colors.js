@@ -1,19 +1,45 @@
 const COLORS = [
-  { name: "Dorado", value: "#EFB810" },
+  { name: "Dorado", value: "#EE9303" },
+  { name: "Piel", value: "#FFD9C2" },
+  { name: "Piel mestizo", value: "#CEBC8F" },
   { name: "Negro", value: "##0C0A09" },
-  { name: "Gris", value: "#6b7280" },
+  { name: "Blanco", value: "#EEEEED" },
+  { name: "Gris", value: "#808080" },
+  { name: "Gris oscuro", value: "#5A5F65" },
   { name: "Rojo", value: "#FF0000" },
   { name: "Rojo oscuro", value: "#800000" },
+  { name: "Rojo claro", value: "#FF3232" },
+  { name: "Rosado", value: "#FACFEC" },
+  { name: "Rosado claro", value: "#FFE8F7" },
+  { name: "Rosado oscuro", value: "#ff4266" },
+  { name: "Café", value: "#492306" },
+  { name: "Café claro", value: "#A88363" },
+  { name: "Café oscuro", value: "#321302" },
+  { name: "Bronze", value: "#AF9D61" },
   { name: "Amarillo", value: "#FFFF00" },
+  { name: "Amarillo oscuro", value: "#FFE62D" },
+  { name: "Naranja", value: "#FB7B0B" },
+  { name: "Naranja oscuro", value: "#F95215" },
   { name: "Verde oliva", value: "#808000" },
   { name: "Verde lima", value: "#00FF00" },
   { name: "Verde", value: "#008000" },
   { name: "Aguamarina", value: "#00FFFF" },
   { name: "Turquesa", value: "#008080" },
   { name: "Azul", value: "#0000FF" },
+  { name: "Azul cielo", value: "#A1D3F9" },
   { name: "Azul navy", value: "#000080" },
   { name: "Fucsía", value: "#FF00FF" },
   { name: "Morado", value: "#800080" },
+  { name: "Lila", value: "#CDBFF1" },
+  { name: "Nude", value: "#dcb49e" },
+  { name: "Beige", value: "#EEE1C9" },
+  { name: "Beige oscuro", value: "#EBC5A7" },
+  { name: "Coral", value: "#EC6161" },
+  { name: "Verde pastel", value: "#A5D4D1" },
+  { name: "Gris pastel", value: "#A3ABC7" },
+  { name: "Morado pastel", value: "#7C7191" },
+  { name: "Café pastel", value: "#F2C6A5" },
+  { name: "Amarillo pastel", value: "#F2C6A5" },
 ];
 
 export const COLOR_BY_VALUE = new Map(
@@ -21,3 +47,5 @@ export const COLOR_BY_VALUE = new Map(
 );
 
 export default COLORS;
+
+//{ name: "", value: "#" },
