@@ -6,7 +6,7 @@ const ColorSidebar = ({ color, setColor, setTool }) => {
     const [isMinimized, setIsMinimized] = useState(false);
 
     return (
-        <aside className={`shrink-0 bg-stone-700 text-stone-100 fixed top-2 right-2 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500 ${isMinimized ? "h-12 w-12 p-1" : "w-60 p-3"}`}>
+        <aside className={`shrink-0 bg-stone-700 text-stone-100 fixed top-2 z-20 right-2 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500 ${isMinimized ? "h-12 w-12 p-1" : "w-60 p-3"}`}>
             {isMinimized ? (
                 <button
                     type="button"

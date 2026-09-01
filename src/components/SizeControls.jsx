@@ -45,7 +45,7 @@ const SizeControls = ({
   return (
     <div className="grid grid-cols-2 gap-2 text-stone-100">
       <div className="rounded-md bg-stone-700/70 p-2">
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-300">
+        <label className="mb-1 block text-xs font-medium tracking-wide text-stone-300">
           Ancho
         </label>
         <input
@@ -72,7 +72,7 @@ const SizeControls = ({
       </div>
 
       <div className="rounded-md bg-stone-700/70 p-2">
-        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-stone-300">
+        <label className="mb-1 block text-xs font-medium tracking-wide text-stone-300">
           Alto
         </label>
         <input

@@ -11,7 +11,7 @@ const EditorToolbar = ({
 
   return (
     <>
-      <div className="fixed top-2 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-2 bg-stone-700 py-2 px-3 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500">
+      <div className="fixed top-2 z-30 left-1/2 transform -translate-x-1/2 flex justify-center items-center gap-2 bg-stone-700 py-2 px-3 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500">
 
         {/* PINTAR */}
         <button

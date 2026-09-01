@@ -127,7 +127,13 @@ const PatternCanvas = ({
 
     return (
         <div
-            className="flex h-full w-full items-center justify-center overflow-auto p-0"
+            className="relative flex h-full w-full items-start justify-center overflow-auto p-0 pt-26
+             before:pointer-events-none before:absolute before:inset-0
+             before:bg-[url('/assets/logo.png')]
+             before:bg-size-[160px_auto]
+             before:bg-repeat
+             before:bg-center
+             before:opacity-5"
             onPointerUp={handlePaintEnd}
             onPointerCancel={handlePaintEnd}
             onPointerLeave={() => {
@@ -137,9 +143,9 @@ const PatternCanvas = ({
                 }
             }}
         >
-            <div className="flex flex-col">
+            <div className="flex flex-col relative z-10">
                 <div className="mb-2 flex items-center gap-2 text-left text-sm font-medium text-stone-300">
-                    <span className="text-lg font-bold uppercase">{patternName || "Diseño sin guardar"}</span>
+                    <span className="font-bold uppercase">{patternName || "Diseño sin guardar"}</span>
                     {isDirty && (
                         <span
                             className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 pb-0.5 pt-1 text-[10px] font-medium uppercase tracking-wide text-amber-300 ring-1 ring-inset ring-amber-500/40"

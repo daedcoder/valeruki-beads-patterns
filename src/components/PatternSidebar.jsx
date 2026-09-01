@@ -26,12 +26,14 @@ const PatternSidebar = ({
         useState(false);
     const [showSaveDialog, setShowSaveDialog] =
         useState(false);
+    const [saveMode, setSaveMode] = useState("save");
     const [isMinimized, setIsMinimized] = useState(false);
     const [patternName, setPatternName] = useState("");
     const [saveError, setSaveError] = useState("");
 
-    const openSaveDialog = () => {
-        setPatternName("");
+    const openSaveDialog = (mode = "save") => {
+        setSaveMode(mode);
+        setPatternName(mode === "duplicate" ? `${openedPattern?.name ?? ""} copia` : "");
         setSaveError("");
         setShowSaveDialog(true);
     };
@@ -51,7 +53,19 @@ const PatternSidebar = ({
         },
         {
             label: "Guardar",
-            onClick: openedPattern ? saveCurrentPattern : openSaveDialog,
+            onClick: () => {
+                if (!openedPattern) {
+                    openSaveDialog("save");
+                    return;
+                }
+
+                if (isDirty) {
+                    saveCurrentPattern();
+                    return;
+                }
+
+                openSaveDialog("duplicate");
+            },
             icon: (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
                     <path d="M6 4h10l4 4v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
@@ -60,6 +74,14 @@ const PatternSidebar = ({
                 </svg>
             ),
             highlight: isDirty,
+        },
+        {
+            label: "Duplicar",
+            onClick: () => openSaveDialog("duplicate"),
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /><path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></svg>
+            ),
+            highlight: false,
         },
         {
             label: "Abrir",
@@ -88,7 +110,7 @@ const PatternSidebar = ({
         }
 
         try {
-            await savePattern(patternName.trim());
+            await savePattern(patternName.trim(), saveMode === "duplicate");
             setShowSaveDialog(false);
         } catch (error) {
             setSaveError(String(error));
@@ -96,7 +118,7 @@ const PatternSidebar = ({
     };
 
     return (
-        <aside className={`shrink-0 bg-stone-700 text-stone-100 fixed top-2 left-2 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500 ${isMinimized ? "h-12 w-12 p-1" : "w-70 p-3"}`}>
+        <aside className={`shrink-0 bg-stone-700 text-stone-100 fixed top-2 z-20 left-2 rounded-lg shadow shadow-black/50 overflow-hidden border border-stone-500 ${isMinimized ? "h-12 w-12 p-1" : "w-70 p-3"}`}>
             {isMinimized ? (
                 <button
                     type="button"
@@ -109,7 +131,7 @@ const PatternSidebar = ({
                 </button>
             ) : (
                 <>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         {actions.map(({ label, icon, onClick, highlight }) => (
                             <button
                                 key={label}
@@ -175,7 +197,7 @@ const PatternSidebar = ({
                                 onMouseDown={(event) => event.stopPropagation()}
                             >
                                 <h2 className="text-center uppercase font-semibold text-stone-100">
-                                    Guardar diseño
+                                    {saveMode === "duplicate" ? "Guardar como" : "Guardar diseño"}
                                 </h2>
                                 <label className="mt-5 block text-sm text-stone-200">
                                     Nombre del diseño
@@ -202,7 +224,7 @@ const PatternSidebar = ({
                                         type="submit"
                                         className="rounded bg-blue-700 px-4 py-2 text-sm text-white hover:bg-blue-800"
                                     >
-                                        Guardar
+                                        {saveMode === "duplicate" ? "Duplicar" : "Guardar"}
                                     </button>
                                 </div>
                             </form>
@@ -212,7 +234,7 @@ const PatternSidebar = ({
                     <div className="my-4 h-px w-full bg-stone-500/80" />
 
                     <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-stone-200">
-                        Propiedades del patrón
+                        Propiedades
                     </h2>
 
                     <div className="mb-4">

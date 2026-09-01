@@ -38,6 +38,7 @@ struct PatternRecord {
     width: usize,
     height: usize,
     beads: Vec<BeadData>,
+    created_at: String,
 }
 
 fn database_path() -> Result<PathBuf, String> {
@@ -147,7 +148,7 @@ fn list_patterns() -> Result<Vec<PatternRecord>, String> {
     let (connection, _) = open_database()?;
     let mut statement = connection
         .prepare(
-            "SELECT id, name, pattern_type, width, height, cells
+            "SELECT id, name, pattern_type, width, height, cells, created_at
              FROM patterns ORDER BY updated_at DESC, id DESC",
         )
         .map_err(|error| format!("No se pudieron consultar los patrones: {error}"))?;
@@ -170,6 +171,7 @@ fn list_patterns() -> Result<Vec<PatternRecord>, String> {
                 width: row.get(3)?,
                 height: row.get(4)?,
                 beads,
+                created_at: row.get(6)?,
             })
         })
         .map_err(|error| format!("No se pudieron leer los patrones: {error}"))?

@@ -41,7 +41,22 @@ const findColorName = (value) => {
 const formatPatternType = (value) =>
     value === "peyote" ? "Peyote" : value === "telar" ? "Telar" : value;
 
+const formatCreatedAt = (value) => {
+    if (!value) return "Sin fecha";
 
+    const dateValue = value.includes(" ") ? value.replace(" ", "T") : value;
+    const date = new Date(dateValue);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    }).format(date);
+};
 
 const Editor = () => {
     const [patternType, setPatternType] = useState("peyote");
@@ -427,7 +442,7 @@ const Editor = () => {
         [commitHistory]
     );
 
-    const savePattern = useCallback(async (name) => {
+    const savePattern = useCallback(async (name, duplicate = false) => {
         const currentPattern = patternRef.current;
         const currentWidth = widthRef.current;
         const currentHeight = heightRef.current;
@@ -441,9 +456,11 @@ const Editor = () => {
             )
         );
 
+        const targetPatternId = duplicate ? null : openedPattern?.id ?? null;
+
         const savedId = await invoke("save_pattern", {
             input: {
-                pattern_id: openedPattern?.id ?? null,
+                pattern_id: targetPatternId,
                 name,
                 pattern_type: currentPatternType,
                 width: currentWidth,
@@ -452,7 +469,11 @@ const Editor = () => {
             },
         });
 
-        setOpenedPattern((current) => current ?? { id: savedId, name });
+        const nextName = name.trim();
+        setOpenedPattern((current) => ({
+            id: savedId,
+            name: nextName,
+        }));
         setIsDirty(false);
         return savedId;
     }, [openedPattern]);
@@ -460,7 +481,7 @@ const Editor = () => {
     const saveCurrentPattern = useCallback(() => {
         if (!openedPattern) return;
 
-        savePattern(openedPattern.name)
+        savePattern(openedPattern.name, false)
             .catch((error) => {
                 console.error("No se pudo actualizar el patrón:", error);
                 pushToast(
@@ -683,7 +704,7 @@ const Editor = () => {
                     }}
                 >
                     <div
-                        className="flex max-h-[80vh] w-full max-w-lg flex-col rounded-lg bg-stone-800 border border-stone-600 p-6 text-stone-100 shadow-xl"
+                        className="flex max-h-[80vh] w-full max-w-4xl flex-col rounded-lg bg-stone-800 border border-stone-600 p-6 text-stone-100 shadow-xl"
                         onMouseDown={(event) => event.stopPropagation()}
                     >
                         <div className="flex items-center justify-between gap-4">
@@ -774,7 +795,7 @@ const Editor = () => {
                                                 </button>
                                                 <div className="flex items-center gap-3">
                                                     <span className="text-xs text-stone-400 whitespace-nowrap">
-                                                        {record.beads.length} beads
+                                                        Creado: {formatCreatedAt(record.created_at)}
                                                     </span>
                                                     <div className="flex items-center gap-1">
                                                         <button
@@ -783,11 +804,11 @@ const Editor = () => {
                                                                 event.stopPropagation();
                                                                 startRenaming(record);
                                                             }}
-                                                            className="rounded p-1.5 text-stone-300 hover:bg-stone-700 hover:text-blue-400"
+                                                            className="rounded p-3 text-stone-300 hover:bg-stone-700 hover:text-blue-400"
                                                             aria-label="Renombrar"
                                                             title="Renombrar"
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-edit"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" /><path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415z" /><path d="M16 5l3 3" /></svg>
                                                         </button>
                                                         <button
                                                             type="button"
@@ -795,11 +816,11 @@ const Editor = () => {
                                                                 event.stopPropagation();
                                                                 requestDelete(record);
                                                             }}
-                                                            className="rounded p-1.5 text-stone-300 hover:bg-stone-700 hover:text-red-400"
+                                                            className="rounded p-3 text-stone-300 hover:bg-stone-700 hover:text-red-400"
                                                             aria-label="Eliminar"
                                                             title="Eliminar"
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-trash"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M4 7l16 0" /><path d="M10 11l0 6" /><path d="M14 11l0 6" /><path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /><path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /></svg>
                                                         </button>
                                                     </div>
                                                 </div>
