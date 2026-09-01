@@ -860,7 +860,7 @@ const Editor = () => {
                             t.variant === "error"
                                 ? "border-red-500/50 bg-red-950/90 text-red-100"
                                 : t.variant === "success"
-                                ? "border-emerald-500/50 bg-emerald-950/90 text-emerald-100"
+                                ? "border-stone-500/50 bg-stone-950/90 text-stone-100"
                                 : "border-sky-500/50 bg-sky-950/90 text-sky-100"
                         }`}
                         role={t.variant === "error" ? "alert" : "status"}
