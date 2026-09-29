@@ -131,13 +131,13 @@ const PatternSidebar = ({
                 </button>
             ) : (
                 <>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex gap-1 justify-evenly">
                         {actions.map(({ label, icon, onClick, highlight }) => (
                             <button
                                 key={label}
                                 type="button"
                                 onClick={onClick}
-                                className={`relative flex flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-[11px] text-stone-100 transition ${highlight
+                                className={`w-full relative flex flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-stone-100 transition ${highlight
                                     ? "bg-amber-600/30 ring-1 ring-inset ring-amber-400/50 hover:bg-amber-600/40"
                                     : "bg-stone-800/50 hover:bg-stone-600"
                                     }`}
@@ -149,7 +149,7 @@ const PatternSidebar = ({
                                     />
                                 )}
                                 <span className="flex h-8 w-8 items-center justify-center text-stone-100">{icon}</span>
-                                <span className="font-medium tracking-tight">{label}</span>
+                                <span className="font-medium tracking-tight text-[9px]">{label}</span>
                             </button>
                         ))}
                     </div>
