@@ -2,6 +2,6 @@
 
 Diseñador de patrones (peyote o telar) con delicas Miyuki para accesorios tejidos a mano.
 
-<img src="assets/Captura de pantalla 2026.png" alt="Captura de la aplicación" width="700">
+<img src="public/assets/Captura%20de%20pantalla%202026.png" alt="Captura de pantalla" width="800">
 
 
