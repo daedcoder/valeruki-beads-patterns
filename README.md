@@ -1,3 +1,5 @@
 # Valeruki Beads Patterns
 
-Diseñador de patrones con delicas para accesorios tejidos a mano. 
+Diseñador de patrones (peyote o telar) con delicas Miyuki para accesorios tejidos a mano. 
+
+
